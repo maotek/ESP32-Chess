@@ -1,0 +1,3 @@
+#define STATE_START 0
+#define STATE_CONNECT 1
+#define STATE_INGAME 2

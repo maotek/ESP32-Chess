@@ -1,8 +1,8 @@
 class Menu {
-  private:
+private:
 
-  public:
-    void drawStartMenu(void);
-    void drawConnectMenu(void);
-    void drawInGameMenu(void);
+public:
+  void drawStartMenu(void);
+  void drawConnectMenu(void);
+  void drawInGameMenu(void);
 };

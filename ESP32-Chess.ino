@@ -9,6 +9,7 @@
 #include "states.h"
 #include "Buttons.h"
 #include "ButtonMap.h"
+#include "Engine.h"
 
 #define CONNECT_INTERVAL 1000
 #define DRAW_INTERVAL 15 // ~60 FPS
@@ -26,6 +27,7 @@ extern struct_message receive_data;
 Board board;
 Menu menu;
 Connection connection;
+Engine engine;
 
 uint8_t color;
 uint8_t state = STATE_START;
@@ -43,6 +45,9 @@ uint8_t prev_y;
 bool selected = false;
 uint8_t selectedPiece;
 uint8_t prevPiece;
+bool cannotSelect = false;
+
+uint32_t cannotSelectTime;
 
 
 void setup() {
@@ -112,6 +117,13 @@ void core0_task(void *pvParameters) {
             board.drawCursor(cur_x, cur_y, TFT_GREEN);
           } else {
             board.drawCursor(cur_x, cur_y, TFT_WHITE);
+          }
+
+          if (cannotSelect) {
+            board.drawCursor(cur_x, cur_y, TFT_RED);
+            if (millis() - cannotSelectTime > 400) {
+              cannotSelect = false;
+            }
           }
 
           board.draw();

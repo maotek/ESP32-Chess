@@ -1,7 +1,10 @@
 #include "Engine.h"
 #include "Board.h"
+#include "Arduino.h"
 
 extern Board board;
+extern bool cannotSelect;
+extern uint32_t cannotSelectTime;
 
 bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_t dest_y, uint8_t **board, uint8_t color, uint8_t piece)
 {
@@ -50,4 +53,29 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
       
       break;
   }
+}
+
+bool Engine::checkValidSelect(uint8_t cur_x, uint8_t cur_y, uint8_t color) {
+  // If the cursor is not on any piece
+  if (board.board[cur_y][cur_x] == 0) {
+    cannotSelect = true;
+    cannotSelectTime = millis();
+    return false;
+  };
+  // If the cursor is on an enemy piece
+  if (color == 0) {
+    if (board.board[cur_y][cur_x] >= 17) {
+      cannotSelect = true;
+      cannotSelectTime = millis();
+      return false;
+    };
+  } else {
+    if (board.board[cur_y][cur_x] < 17) {
+      cannotSelect = true;
+      cannotSelectTime = millis();
+      return false;
+    };
+  }
+
+  return true;
 }

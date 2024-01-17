@@ -10,6 +10,7 @@
 extern uint8_t state;
 extern Board board;
 extern Connection connection;
+extern Engine engine;
 
 extern uint8_t color;
 
@@ -21,6 +22,9 @@ extern uint8_t prev_y;
 extern bool selected;
 extern uint8_t selectedPiece;
 extern uint8_t prevPiece;
+extern bool cannotSelect;
+
+extern uint32_t cannotSelectTime;
 
 uint32_t buttonUpTime = 0;
 uint32_t buttonDownTime = 0;
@@ -59,7 +63,7 @@ void handleButtons() {
       down_handle();
       buttonDownPressed = true;
     }
-    // Hold the button at least 0.75s to activate fast scroll
+    // Hold the button at least 0.5s to activate fast scroll
     if (millis() - buttonDownTime > AUTOSCROLL_DELAY && millis() - buttonDownPrevTime > AUTOSCROLL_INTERVAL && buttonDownPressed) {
       down_handle();
       buttonDownPrevTime = millis();
@@ -178,14 +182,7 @@ void menu_handle() {
       if (yourTurn) {
         if (!selected) {
 
-          // If the cursor is not on any piece
-          if (board.board[cur_y][cur_x] == 0) break;
-          // If the cursor is on an enemy piece
-          if (color == 0) {
-            if (board.board[cur_y][cur_x] >= 17) break;
-          } else {
-            if (board.board[cur_y][cur_x] < 17) break;
-          }
+          if (!engine.checkValidSelect(cur_x, cur_y, color)) break;
 
           selected = true;
           selectedPiece = board.board[cur_y][cur_x];
@@ -193,8 +190,7 @@ void menu_handle() {
           prev_x = cur_x;
           prev_y = cur_y;
           prevPiece = selectedPiece;
-        } else {
-          // Serial.println("released");
+        } else { // Released
           board.board[cur_y][cur_x] = selectedPiece;
           selected = false;
           selectedPiece = 0;

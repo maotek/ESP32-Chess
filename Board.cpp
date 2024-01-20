@@ -8,6 +8,7 @@ extern TFT_eSprite sprite;
 extern TFT_eSprite tmpSpr;
 
 extern bool yourTurn;
+extern uint8_t color;
 
 uint32_t turnTimer;
 #define TURN_INDICATOR_INTERVAL 500
@@ -119,8 +120,16 @@ void Board::movePiece(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_t dest
 }
 
 void Board::moveOpponentPiece(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_t dest_y) {
+  // en passant check
+  if (board[7 - dest_y][7 - dest_x] == 0 && 7 - dest_x != 7 - src_x) {
+    Serial.println("enemy en passanted");
+    board[7 - dest_y - 1][7 - dest_x] = 0;
+  }
+
   board[7 - dest_y][7 - dest_x] = board[7 - src_y][7 - src_x];
   board[7 - src_y][7 - src_x] = 0;
+
+
 }
 
 void Board::drawCursor(uint8_t x, uint8_t y, uint32_t color) {

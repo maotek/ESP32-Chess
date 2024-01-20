@@ -191,12 +191,22 @@ void menu_handle() {
           prev_y = cur_y;
           prevPiece = selectedPiece;
         } else { // Released
+
+          // placed on exactly the same place
+          if (cur_y == prev_y && cur_x == prev_x) {
+            board.board[cur_y][cur_x] = selectedPiece;
+            selected = false;
+            selectedPiece = 0;
+            break;
+          }
+
+          // Validate move
+          if (!engine.checkValidMove(prev_x, prev_y, cur_x, cur_y, color, selectedPiece)) break;
+
           board.board[cur_y][cur_x] = selectedPiece;
           selected = false;
           selectedPiece = 0;
-
-          // Validate move
-
+          
           connection.sendData(prev_x, prev_y, cur_x, cur_y);
 
           delay(100);

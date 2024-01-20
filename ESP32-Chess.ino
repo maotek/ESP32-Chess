@@ -47,6 +47,13 @@ uint8_t selectedPiece;
 uint8_t prevPiece;
 bool cannotSelect = false;
 
+// Opponents' last move
+uint8_t enemyLastSrc_x;
+uint8_t enemyLastSrc_y;
+uint8_t enemyLastDest_x;
+uint8_t enemyLastDest_y;
+
+
 uint32_t cannotSelectTime;
 
 
@@ -179,7 +186,11 @@ void core1_task(void *pvParameters) {
             initGame(receive_data.dest_y == 0 ? 1 : 0);
           } else {
             Serial.println("received");
-            // TODO: when moved a piece, reset the prevpiece etc.
+            // TODO: when moved a piece, reset the prevpiece etc **Not necessary anymore I think**
+            enemyLastSrc_x = 7 - receive_data.src_x;
+            enemyLastSrc_y = 7 - receive_data.src_y;
+            enemyLastDest_x = 7 - receive_data.dest_x;
+            enemyLastDest_y = 7 - receive_data.dest_y;
             board.moveOpponentPiece(receive_data.src_x, receive_data.src_y, receive_data.dest_x, receive_data.dest_y);
             yourTurn = !yourTurn;
           }

@@ -6,6 +6,7 @@ private:
   uint16_t *pieceToBmp(uint8_t num);
 
 public:
+  bool color;
   void drawPiece(uint8_t piece, uint32_t x, uint32_t y);
   uint8_t board[8][8] = { 0 };
   void init(bool color);

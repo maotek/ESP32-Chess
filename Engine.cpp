@@ -93,7 +93,7 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
       // check destination
       if (color == 0 && board.board[dest_y][dest_x] != 0) {
         if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else {
+      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
         if (board.board[dest_y][dest_x] >= 17) goodMove = false;
       }
       break;
@@ -129,29 +129,33 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
       // check destination
       if (color == 0 && board.board[dest_y][dest_x] != 0) {
         if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else {
+      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
         if (board.board[dest_y][dest_x] >= 17) goodMove = false;
       }
       break;
 
     // queen
     case 12:
+    case 28:
 
       break;
 
     // king
     case 13:
+    case 29:
+      goodMove = true;
 
+      if (!(abs(dest_y - src_y) <= 1 && abs(dest_x - src_x) <= 1)) {
+        goodMove = false;
+      }
+
+      // check destination
+      if (color == 0 && board.board[dest_y][dest_x] != 0) {
+        if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
+      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
+        if (board.board[dest_y][dest_x] >= 17) goodMove = false;
+      }
       break;
-      // case 17 ... 24:
-
-      //   break;
-      // case 28:
-
-      //   break;
-      // case 29:
-
-      //   break;
   }
 
   if (!goodMove) {
@@ -186,4 +190,8 @@ bool Engine::checkValidSelect(uint8_t cur_x, uint8_t cur_y, uint8_t color) {
   }
 
   return true;
+}
+
+bool Engine::checkKingIsCheck(uint8_t color) {
+
 }

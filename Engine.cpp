@@ -13,6 +13,8 @@ extern uint8_t enemyLastDest_y;
 
 bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_t dest_y, uint8_t color, uint8_t piece) {
   bool goodMove = true;
+  bool somethingInBetween = false; // for rooks, bishops and queen
+
   // TODO: implement move check
   Serial.print(enemyLastSrc_x);
   Serial.print(enemyLastSrc_y);
@@ -23,9 +25,10 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 1 ... 8:
     case 17 ... 24:
       goodMove = false;
-      if (src_x == dest_x && dest_y == src_y - 1 && board.board[dest_y][dest_x] == 0) goodMove = true;             // one step
+      if (src_x == dest_x && dest_y == src_y - 1 && board.board[dest_y][dest_x] == 0) goodMove = true;                                                         // one step
       else if (src_x == dest_x && dest_y == 4 && src_y == 6 && board.board[dest_y + 1][dest_x + 1] == 0 && board.board[dest_y][dest_x] == 0) goodMove = true;  // two step
 
+      // TODO: also keep track of the lastPiece that is moved, if it is not a pawn, this case is still true
       else if (dest_x == src_x + 1 && dest_y == src_y - 1 && enemyLastSrc_y == 1 && enemyLastDest_y == 3 && enemyLastSrc_x == src_x + 1) {  // en passant
         // remove piece at player who played en passant
         board.board[dest_y + 1][dest_x] = 0;
@@ -35,11 +38,9 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
         goodMove = true;
       }
 
-      else if ((dest_x == src_x + 1 || dest_x == src_x - 1) && dest_y == src_y - 1) {  // pawn takes an enemy piece
-        if (color == 0) {
-          if (board.board[dest_y][dest_x] >= 17) goodMove = true;
-        } else {
-          if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = true;
+      else if ((dest_x == src_x + 1 || dest_x == src_x - 1) && dest_y == src_y - 1 && board.board[dest_y][dest_x] != 0) {  // pawn takes an enemy piece
+        if (checkTakeOpponent(dest_x, dest_y, color)) {
+          goodMove = true;
         }
       }
       break;
@@ -49,14 +50,19 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 16:
     case 25:
     case 32:
-      goodMove = true;
+      goodMove = false;
+      somethingInBetween = false;
+
       // going up / down
       if (src_x == dest_x && dest_y != src_y) {
         uint8_t min = dest_y < src_y ? dest_y : src_y;
         uint8_t max = dest_y > src_y ? dest_y : src_y;
         for (int i = min; i < max; i++) {
-          if (i == dest_y) continue; // we check the destination at the end of the case
-          if (board.board[i][src_x] != 0) goodMove = false;
+          if (i == src_x || i == src_y) continue; // skip src and dest
+          if (board.board[i][src_x] != 0) {
+            somethingInBetween = true;
+            break;
+          }
         }
       }
 
@@ -65,19 +71,17 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
         uint8_t min = dest_x < src_x ? dest_x : src_x;
         uint8_t max = dest_x > src_x ? dest_x : src_x;
         for (int i = min; i < max; i++) {
-          if (board.board[src_y][i] != 0) goodMove = false;
+          if (i == src_x || i == src_y) continue; // skip src and dest
+          if (board.board[src_y][i] != 0) {
+            somethingInBetween = true;
+            break;
+          }
         }
       }
 
-      else {
-        goodMove = false;
-      }
-
       // check destination
-      if (color == 0) {
-        if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else {
-        if (board.board[dest_y][dest_x] >= 17) goodMove = false;
+      if (!somethingInBetween && checkTakeOpponent(dest_x, dest_y, color)) {
+        goodMove = true;
       }
       break;
 
@@ -86,16 +90,14 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 15:
     case 26:
     case 31:
-      goodMove = true;
+      goodMove = false;
 
-      if (!((abs(dest_y - src_y) == 1 && abs(dest_x - src_x) == 2) || (abs(dest_x - src_x) == 1 && abs(dest_y - src_y) == 2))) goodMove = false;
-
-      // check destination
-      if (color == 0 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] >= 17) goodMove = false;
+      if ((abs(dest_y - src_y) == 1 && abs(dest_x - src_x) == 2) || (abs(dest_x - src_x) == 1 && abs(dest_y - src_y) == 2)) {
+        if (checkTakeOpponent(dest_x, dest_y, color)) {
+          goodMove = true;
+        }
       }
+
       break;
 
 
@@ -106,12 +108,12 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 30:
       goodMove = true;
 
+      // If not moved diagonally
       if (!(abs(dest_y - src_y) == abs(dest_x - src_x))) {
         goodMove = false;
       }
 
       else if (abs(dest_y - src_y) == abs(dest_x - src_x)) {
-
         int8_t x_dir = dest_x < src_x ? -1 : 1;
         int8_t y_dir = dest_y < src_y ? -1 : 1;
         uint8_t x = src_x + x_dir;
@@ -127,10 +129,8 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
       }
 
       // check destination
-      if (color == 0 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] >= 17) goodMove = false;
+      if (!checkTakeOpponent(dest_x, dest_y, color)) {
+        goodMove = false;
       }
       break;
 
@@ -143,17 +143,12 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     // king
     case 13:
     case 29:
-      goodMove = true;
+      goodMove = false;
 
-      if (!(abs(dest_y - src_y) <= 1 && abs(dest_x - src_x) <= 1)) {
-        goodMove = false;
-      }
-
-      // check destination
-      if (color == 0 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) goodMove = false;
-      } else if (color == 1 && board.board[dest_y][dest_x] != 0) {
-        if (board.board[dest_y][dest_x] >= 17) goodMove = false;
+      if (abs(dest_y - src_y) <= 1 && abs(dest_x - src_x) <= 1) {
+        if (checkTakeOpponent(dest_x, dest_y, color)) {
+          goodMove = true;
+        }
       }
       break;
   }
@@ -193,5 +188,17 @@ bool Engine::checkValidSelect(uint8_t cur_x, uint8_t cur_y, uint8_t color) {
 }
 
 bool Engine::checkKingIsCheck(uint8_t color) {
+}
 
+/*
+  Helper function for the checkValidMove function.
+  When the move appears to take a piece, we check whether the piece to be taken is indeed from the opponent color
+*/
+bool Engine::checkTakeOpponent(uint8_t dest_x, uint8_t dest_y, uint8_t color) {
+  if (color == 0) {
+    if (board.board[dest_y][dest_x] < 17 && board.board[dest_y][dest_x] > 0) return false;
+  } else if (color == 1) {
+    if (board.board[dest_y][dest_x] >= 17) return false;
+  }
+  return true;
 }

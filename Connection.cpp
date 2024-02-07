@@ -12,8 +12,8 @@ bool Connection::received = false;
 
 
 // Mac addresses for ESPNow
-// uint8_t broadcastAddress[6] = {0xA8, 0x42, 0xE3, 0x48, 0xDA, 0x0C}; // usbc
-uint8_t broadcastAddress[6] = { 0xC8, 0xF0, 0x9E, 0xF3, 0x7B, 0xA4 };  // usb micro
+uint8_t broadcastAddress[6] = {0xA8, 0x42, 0xE3, 0x48, 0xDA, 0x0C}; // usbc
+// uint8_t broadcastAddress[6] = { 0xC8, 0xF0, 0x9E, 0xF3, 0x7B, 0xA4 };  // usb micro
 
 
 void Connection::data_sent(const uint8_t *mac_addr, esp_now_send_status_t status) {

@@ -46,7 +46,7 @@ bool buttonMenuPressed = false;
 
 uint8_t menuPresses = 0;
 
-#define DEBOUNCE_TIME 85
+#define DEBOUNCE_TIME 10
 #define AUTOSCROLL_DELAY 500
 #define AUTOSCROLL_INTERVAL 200
 
@@ -110,7 +110,7 @@ void handleButtons() {
     }
   }
 
-  if (millis() - buttonMenuTime > 500) {
+  if (millis() - buttonMenuTime > 350) {
     // Serial.println(String(menuPresses));
     if (menuPresses == 1 && digitalRead(BUTTON_MENU) == LOW) {
       Serial.println("Pressed Once");

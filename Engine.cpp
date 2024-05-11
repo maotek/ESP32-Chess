@@ -13,7 +13,7 @@ extern uint8_t enemyLastDest_y;
 
 bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_t dest_y, uint8_t color, uint8_t piece) {
   bool goodMove = true;
-  bool somethingInBetween = false; // for rooks, bishops and queen
+  bool somethingInBetween = true; // for rooks, bishops and queen, default to true so that moves are not goodMove by default
 
   // TODO: implement move check
   Serial.print(enemyLastSrc_x);
@@ -51,14 +51,14 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 25:
     case 32:
       goodMove = false;
-      somethingInBetween = false;
 
       // going up / down
       if (src_x == dest_x && dest_y != src_y) {
+        somethingInBetween = false; // reset flag
         uint8_t min = dest_y < src_y ? dest_y : src_y;
         uint8_t max = dest_y > src_y ? dest_y : src_y;
         for (int i = min; i < max; i++) {
-          if (i == src_x || i == src_y) continue; // skip src and dest
+          if (i == dest_y || i == src_y) continue; // skip src and dest
           if (board.board[i][src_x] != 0) {
             somethingInBetween = true;
             break;
@@ -68,10 +68,11 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
 
       // going left / right
       else if (src_x != dest_x && dest_y == src_y) {
+        somethingInBetween = false;
         uint8_t min = dest_x < src_x ? dest_x : src_x;
         uint8_t max = dest_x > src_x ? dest_x : src_x;
         for (int i = min; i < max; i++) {
-          if (i == src_x || i == src_y) continue; // skip src and dest
+          if (i == src_x || i == dest_x) continue; // skip src and dest
           if (board.board[src_y][i] != 0) {
             somethingInBetween = true;
             break;
@@ -106,21 +107,22 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
     case 14:
     case 27:
     case 30:
-      goodMove = true;
+      goodMove = false;
 
-      // If not moved diagonally
-      if (!(abs(dest_y - src_y) == abs(dest_x - src_x))) {
-        goodMove = false;
-      }
+      // // If not moved diagonally
+      // if (!(abs(dest_y - src_y) == abs(dest_x - src_x))) {
+      //   goodMove = false;
+      // }
 
-      else if (abs(dest_y - src_y) == abs(dest_x - src_x)) {
+      if (abs(dest_y - src_y) == abs(dest_x - src_x)) {
+        somethingInBetween = false;
         int8_t x_dir = dest_x < src_x ? -1 : 1;
         int8_t y_dir = dest_y < src_y ? -1 : 1;
         uint8_t x = src_x + x_dir;
         uint8_t y = src_y + y_dir;
         while (x != dest_x && y != dest_y) {
           if (board.board[y][x] != 0) {
-            goodMove = false;
+            somethingInBetween = true;
             break;
           }
           x += x_dir;
@@ -129,15 +131,65 @@ bool Engine::checkValidMove(uint8_t src_x, uint8_t src_y, uint8_t dest_x, uint8_
       }
 
       // check destination
-      if (!checkTakeOpponent(dest_x, dest_y, color)) {
-        goodMove = false;
+      if (!somethingInBetween && checkTakeOpponent(dest_x, dest_y, color)) {
+        goodMove = true;
       }
       break;
 
     // queen
     case 12:
     case 28:
+      goodMove = false;
 
+      // diagonals
+      if (abs(dest_y - src_y) == abs(dest_x - src_x)) {
+        somethingInBetween = false;
+        int8_t x_dir = dest_x < src_x ? -1 : 1;
+        int8_t y_dir = dest_y < src_y ? -1 : 1;
+        uint8_t x = src_x + x_dir;
+        uint8_t y = src_y + y_dir;
+        while (x != dest_x && y != dest_y) {
+          if (board.board[y][x] != 0) {
+            somethingInBetween = true;
+            break;
+          }
+          x += x_dir;
+          y += y_dir;
+        }
+      }
+
+      // going up / down
+      if (src_x == dest_x && dest_y != src_y) {
+        somethingInBetween = false; // reset flag
+        uint8_t min = dest_y < src_y ? dest_y : src_y;
+        uint8_t max = dest_y > src_y ? dest_y : src_y;
+        for (int i = min; i < max; i++) {
+          if (i == dest_y || i == src_y) continue; // skip src and dest
+          if (board.board[i][src_x] != 0) {
+            somethingInBetween = true;
+            break;
+          }
+        }
+      }
+
+      // going left / right
+      else if (src_x != dest_x && dest_y == src_y) {
+        somethingInBetween = false;
+        uint8_t min = dest_x < src_x ? dest_x : src_x;
+        uint8_t max = dest_x > src_x ? dest_x : src_x;
+        for (int i = min; i < max; i++) {
+          if (i == src_x || i == dest_x ) continue; // skip src and dest
+          if (board.board[src_y][i] != 0) {
+            somethingInBetween = true;
+            break;
+          }
+        }
+      }
+
+      // check destination
+      if (!somethingInBetween && checkTakeOpponent(dest_x, dest_y, color)) {
+        goodMove = true;
+      }
       break;
 
     // king

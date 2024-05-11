@@ -1,6 +1,4 @@
 # ESP32-Chess
 
-Wireless ESP32 chess game using ESP-Now protocol.\
-1. ESP32-WROOM
-2. 240x240 tft display with ST7789 driver
-3. 5 push buttons
+Work In Progress Chess game Using ESP32 and ESP-NOW
+![chess](https://github.com/maotek/ESP32-Chess/blob/main/img.jpg)
